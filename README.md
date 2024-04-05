@@ -18,13 +18,11 @@
 
 # 项目
 
-## 使用 lowdb 保存数据
-
-文件夹中的 views1、routes1、bin1 是使用 lowdb 的文件内容
+## 使用 lowdb 保存数据 -- 1_lowdb
 
 1.  搭建项目：`express -e 项目名`
 2.  安装依赖: `npm i`
-3.  修改 package.json 中的启动方式: `"start": "node ./bin/www"` --> `"start": "nodemon ./bin/www"`
+3.  修改 package.json 中的启动方式: `"start": "node ./bin/www"` --> `"start": "nodemon ./1_lowdb/bin/www"`
 4.  运行项目：`npm start`，浏览器输入：`http://localhost:3000/`
 5.  在【routes】【index.js】设置路由
     ```js
@@ -399,11 +397,7 @@
     </div>
     ```
 
-    ```
-
-    ```
-
-## 使用 mongodb 保存数据
+## 使用 mongodb 保存数据 -- 2_mongodb
 
 1. 下载 mongoose：`npm i mongoose`
 2. 连接 mongodb 并拆分：
@@ -534,7 +528,7 @@
        default: 0 // 默认支出
      },
      account: {
-       type: Number,
+       type: String,
        required: true
      },
      remarks: String
