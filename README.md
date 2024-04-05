@@ -399,113 +399,117 @@
 
 ## 使用 mongodb 保存数据 -- 2_mongodb
 
-1. 下载 mongoose：`npm i mongoose`
-2. 连接 mongodb 并拆分：
+1. 修改 package.json 中的启动方式: `"start": "nodemon ./1_lowdb/bin/www"` --> `"start": "nodemon ./2_mongodb/bin/www"`
+2. 运行项目：`npm start`，浏览器输入：`http://localhost:3000/`
 
-   1. 设置方便管理的公开配置
-      < config/config.js
+3. 下载 mongoose：`npm i mongoose`
+
+4. 连接 mongodb 并拆分：
+
+5. 设置方便管理的公开配置
+   < config/config.js
+
+```js
+module.exports = {
+  DBHOST: '127.0.0.1',
+  DBPORT: 27017,
+  DBNAME: 'accounts'
+}
+```
+
+2. 引入 mongoose 并连接
+   < db/db.js
 
    ```js
-   module.exports = {
-     DBHOST: '127.0.0.1',
-     DBPORT: 27017,
-     DBNAME: 'accounts'
+   /**
+    * @param {Function} success 连接成功回调
+    * @param {Function} error 连接失败回调
+    */
+   module.exports = function (
+     success,
+     error = () => {
+       console.log('连接失败')
+     }
+   ) {
+     // 导入 mongoose
+     const mongoose = require('mongoose')
+     const { DBHOST, DBPORT, DBNAME } = require('../config/config')
+     mongoose.connect(`mongodb://${DBHOST}:${DBPORT}/${DBNAME}`)
+
+     mongoose.connection.once('open', () => {
+       success()
+     })
+
+     mongoose.connection.on('error', () => {
+       error()
+     })
+
+     mongoose.connection.on('close', () => {
+       console.log('关闭成功')
+     })
    }
    ```
 
-   2. 引入 mongoose 并连接
-      < db/db.js
+   3. 传入成功回调内容
+      < bin/www
 
-      ```js
-      /**
-       * @param {Function} success 连接成功回调
-       * @param {Function} error 连接失败回调
-       */
-      module.exports = function (
-        success,
-        error = () => {
-          console.log('连接失败')
-        }
-      ) {
-        // 导入 mongoose
-        const mongoose = require('mongoose')
-        const { DBHOST, DBPORT, DBNAME } = require('../config/config')
-        mongoose.connect(`mongodb://${DBHOST}:${DBPORT}/${DBNAME}`)
+   ```js
+   const db = require('../db/db')
+   db(() => {
+     var app = require('../app')
+     var debug = require('debug')('3-node-accounts:server')
+     var http = require('http')
 
-        mongoose.connection.once('open', () => {
-          success()
-        })
+     var port = normalizePort(process.env.PORT || '3000')
+     app.set('port', port)
 
-        mongoose.connection.on('error', () => {
-          error()
-        })
+     var server = http.createServer(app)
 
-        mongoose.connection.on('close', () => {
-          console.log('关闭成功')
-        })
-      }
-      ```
+     server.listen(port)
+     server.on('error', onError)
+     server.on('listening', onListening)
 
-      3. 传入成功回调内容
-         < bin/www
+     function normalizePort(val) {
+       var port = parseInt(val, 10)
 
-      ```js
-      const db = require('../db/db')
-      db(() => {
-        var app = require('../app')
-        var debug = require('debug')('3-node-accounts:server')
-        var http = require('http')
+       if (isNaN(port)) {
+         return val
+       }
 
-        var port = normalizePort(process.env.PORT || '3000')
-        app.set('port', port)
+       if (port >= 0) {
+         return port
+       }
 
-        var server = http.createServer(app)
+       return false
+     }
+     function onError(error) {
+       if (error.syscall !== 'listen') {
+         throw error
+       }
 
-        server.listen(port)
-        server.on('error', onError)
-        server.on('listening', onListening)
+       var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port
 
-        function normalizePort(val) {
-          var port = parseInt(val, 10)
+       switch (error.code) {
+         case 'EACCES':
+           console.error(bind + ' requires elevated privileges')
+           process.exit(1)
+           break
+         case 'EADDRINUSE':
+           console.error(bind + ' is already in use')
+           process.exit(1)
+           break
+         default:
+           throw error
+       }
+     }
 
-          if (isNaN(port)) {
-            return val
-          }
-
-          if (port >= 0) {
-            return port
-          }
-
-          return false
-        }
-        function onError(error) {
-          if (error.syscall !== 'listen') {
-            throw error
-          }
-
-          var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port
-
-          switch (error.code) {
-            case 'EACCES':
-              console.error(bind + ' requires elevated privileges')
-              process.exit(1)
-              break
-            case 'EADDRINUSE':
-              console.error(bind + ' is already in use')
-              process.exit(1)
-              break
-            default:
-              throw error
-          }
-        }
-
-        function onListening() {
-          var addr = server.address()
-          var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port
-          debug('Listening on ' + bind)
-        }
-      })
-      ```
+     function onListening() {
+       var addr = server.address()
+       var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port
+       debug('Listening on ' + bind)
+     }
+   })
+   ```
 
 3. 编写 schema
    < models/accountModel.js
