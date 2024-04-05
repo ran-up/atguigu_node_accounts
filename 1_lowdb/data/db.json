@@ -1,0 +1,28 @@
+{
+  "accounts": [
+    {
+      "id": "3lTHe1AXD",
+      "title": "分组",
+      "time": "2024-04-05",
+      "type": "0",
+      "account": "10",
+      "remarks": "分组"
+    },
+    {
+      "id": "_1dc-Uydc",
+      "title": "2",
+      "time": "2024-04-17",
+      "type": "0",
+      "account": "2",
+      "remarks": ""
+    },
+    {
+      "id": "BoAHCHBi-",
+      "title": "1",
+      "time": "2024-04-17",
+      "type": "1",
+      "account": "2",
+      "remarks": "1"
+    }
+  ]
+}
