@@ -1058,26 +1058,136 @@ module.exports = {
     1. 安装 express-session：`npm i express-session`
     2. 安装 connect-mongo：`npm i connect-mongo`
     3. 设置 session 中间件
-       < app.js
+
+       1. 引入 session
+          < app.js
+
+          ```js
+          const session = require('express-session')
+          const MongoStore = require('connect-mongo')
+          const { DBHOST, DBPORT, DBNAME } = require('./config/config')
+          app.use(
+            session({
+              name: 'sid', // 设置 cookie 的 name， 默认值是：connect.sid
+              secret: 'ranxin', // 参与加密的字符串（又称签名）
+              saveUninitialized: false, // 是否为每次请求都设置一个 cookie 用来存储 session
+              resave: true, // 是否在每次请求时重新保存 session
+              store: MongoStore.create({
+                mongoUrl: `mongodb://${DBHOST}:${DBPORT}/${DBNAME}` // 数据库的连接配置
+              }),
+              cookie: {
+                httpOnly: true, // 开启前后端无法通过 JS 操作
+                maxAge: 60 // 控制 sessionID 过期时间
+              }
+            })
+          )
+          ```
+
+       2. 设置 session
+          < routes/auth.js
+
+          ```js
+          // 登录操作
+          router.post('/login', (req, res) => {
+            const { username, password } = req.body
+            if (!username) {
+              return res.send('用户名不能为空')
+            } else if (!password) {
+              return res.send('密码不能为空')
+            }
+            userModel
+              .findOne({ username, password: md5(password) })
+              .then(res1 => {
+                if (!res1) {
+                  return res.status(500).send('用户名或密码输入错误')
+                }
+                req.session.username = res1.username
+                req.session._id = res1._id
+                res.render('success', { msg: '登录成功', url: '/account', flag: '1' })
+              })
+              .catch(() => {
+                res.status(500).send('登录失败')
+              })
+          })
+          ```
+
+    4. 编写检测 session 的登录中间件
+
+       < middlewares/checkLoginMiddleware.js
+
        ```js
-       const session = require('express-session')
-       const MongoStore = require('connect-mongo')
-       const { DBHOST, DBPORT, DBNAME } = require('./config/config')
-       app.use(
-         session({
-           name: 'sid', // 设置 cookie 的 name， 默认值是：connect.sid
-           secret: 'ranxin', // 参与加密的字符串（又称签名）
-           saveUninitialized: false, // 是否为每次请求都设置一个 cookie 用来存储 session
-           resave: true, // 是否在每次请求时重新保存 session
-           store: MongoStore.create({
-             mongoUrl: `mongodb://${DBHOST}:${DBPORT}/${DBNAME}` // 数据库的连接配置
-           }),
-           cookie: {
-             httpOnly: true, // 开启前后端无法通过 JS 操作
-             maxAge: 60 // 控制 sessionID 过期时间
-           }
-         })
-       )
+       module.exports = (req, res, next) => {
+         if (!req.session.username) {
+           return res.redirect('/login')
+         }
+         next()
+       }
+       ```
+
+    5. 引入检测 session 的登录中间件
+       < routes/index.js
+
+       ```js
+       const express = require('express')
+       const router = express.Router()
+       const moment = require('moment')
+       const accountModel = require('../../models/accountModel')
+       const checkLoginMiddleware = require('../../middlewares/checkLoginMiddleware')
+       // 首页
+       router.get('/', function (req, res, next) {
+         // 重定向到account页面
+         res.redirect('/account')
+       })
+
+       // 记账列表
+       router.get('/account', checkLoginMiddleware, function (req, res, next) {
+         accountModel
+           .find()
+           .sort({ time: -1 })
+           .then(res1 => {
+             res.render('list', { lists: res1, moment })
+           })
+           .catch(err => {
+             console.log('获取失败', err)
+             res.status(500).send('获取失败')
+           })
+       })
+
+       // 新增记账
+       router.get('/account/create', checkLoginMiddleware, function (req, res, next) {
+         res.render('create')
+       })
+
+       router.post('/account', checkLoginMiddleware, (req, res) => {
+         console.log(req.body)
+         accountModel
+           .create({
+             ...req.body,
+             time: moment(req.body.time).toDate()
+           })
+           .then(() => {
+             res.render('success', { msg: '添加成功', url: '/account', flag: '1' })
+           })
+           .catch(err => {
+             console.log('添加失败', err)
+             res.status(500).send('添加失败')
+           })
+       })
+
+       // 删除
+       router.get('/account/:id', checkLoginMiddleware, (req, res) => {
+         accountModel
+           .deleteOne({ _id: req.params.id })
+           .then(() => {
+             res.render('success', { msg: '删除成功', url: '/account', flag: '0' })
+           })
+           .catch(err => {
+             console.log('删除失败', err)
+             res.status(500).send('添加失败')
+           })
+       })
+
+       module.exports = router
        ```
 
 7.  配置 404
