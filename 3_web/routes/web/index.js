@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const moment = require('moment')
 const accountModel = require('../../models/accountModel')
-
+const checkLoginMiddleware = require('../../middlewares/checkLoginMiddleware')
 // 首页
 router.get('/', function (req, res, next) {
   // 重定向到account页面
@@ -10,7 +10,7 @@ router.get('/', function (req, res, next) {
 })
 
 // 记账列表
-router.get('/account', function (req, res, next) {
+router.get('/account', checkLoginMiddleware, function (req, res, next) {
   accountModel
     .find()
     .sort({ time: -1 })
@@ -24,11 +24,11 @@ router.get('/account', function (req, res, next) {
 })
 
 // 新增记账
-router.get('/account/create', function (req, res, next) {
+router.get('/account/create', checkLoginMiddleware, function (req, res, next) {
   res.render('create')
 })
 
-router.post('/account', (req, res) => {
+router.post('/account', checkLoginMiddleware, (req, res) => {
   console.log(req.body)
   accountModel
     .create({
@@ -45,7 +45,7 @@ router.post('/account', (req, res) => {
 })
 
 // 删除
-router.get('/account/:id', (req, res) => {
+router.get('/account/:id', checkLoginMiddleware, (req, res) => {
   accountModel
     .deleteOne({ _id: req.params.id })
     .then(() => {
