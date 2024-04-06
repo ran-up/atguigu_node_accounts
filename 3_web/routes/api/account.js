@@ -2,9 +2,10 @@ var express = require('express')
 var router = express.Router()
 const moment = require('moment')
 const accountModel = require('../../models/accountModel')
+const checkTokenMiddleware = require('../../middlewares/checkTokenMiddleware')
 
 // 记账列表
-router.get('/account', function (req, res, next) {
+router.get('/account', checkTokenMiddleware, function (req, res, next) {
   accountModel
     .find()
     .sort({ time: -1 })
@@ -25,7 +26,7 @@ router.get('/account', function (req, res, next) {
 })
 
 // 新增账单
-router.post('/account', (req, res) => {
+router.post('/account', checkTokenMiddleware, (req, res) => {
   console.log(req.body)
   if (!req.body.title) {
     res.json({
@@ -78,7 +79,7 @@ router.post('/account', (req, res) => {
 })
 
 // 删除
-router.delete('/account/:id', (req, res) => {
+router.delete('/account/:id', checkTokenMiddleware, (req, res) => {
   accountModel
     .deleteOne({ _id: req.params.id })
     .then(res1 => {
@@ -98,11 +99,11 @@ router.delete('/account/:id', (req, res) => {
 })
 
 // 获取单条账单信息
-router.get('/account/:id', (req, res) => {
+router.get('/account/:id', checkTokenMiddleware, (req, res) => {
   findAccount(req.params.id, res)
 })
 
-router.patch('/account/:id', (req, res) => {
+router.patch('/account/:id', checkTokenMiddleware, (req, res) => {
   const _id = req.params.id
   accountModel
     .updateOne({ _id }, req.body)
