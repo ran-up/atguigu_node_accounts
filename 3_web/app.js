@@ -23,7 +23,7 @@ app.use(
     }),
     cookie: {
       httpOnly: true, // 开启前后端无法通过 JS 操作
-      maxAge: 60 // 控制 sessionID 过期时间
+      maxAge: 60 * 60 * 60 * 24 * 7 // 控制 sessionID 过期时间
     }
   })
 )
