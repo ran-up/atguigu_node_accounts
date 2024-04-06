@@ -688,3 +688,403 @@ module.exports = {
 
    </html>
    ```
+
+## 使用 web 接口 保存数据 -- 3_web
+
+1.  修改 package.json 中的启动方式: `"start": "nodemon ./2_mongodb/bin/www"` --> `"start": "nodemon ./3_web/bin/www"`
+
+2.  在 app.js 中引入 api/accounts.js 并使用：
+    ```js
+    const accountRouter = require('./routes/api/account')
+    app.use('/api', accountRouter)
+    ```
+3.  运行项目：`npm start`，浏览器输入：`http://localhost:3000/api/account`
+
+4.  编写接口：
+
+    1. 新建 routes/api/accounts.js，将 index.js 包含到 web/index.js，accounts.js 的初始内容是 index.js
+    2. 安装好 apipost 软件
+    3. 编写接口:
+       < routes/api/accounts.js
+
+       ```js
+       var express = require('express')
+       var router = express.Router()
+       const moment = require('moment')
+       const accountModel = require('../../models/accountModel')
+
+       // 记账列表
+       router.get('/account', function (req, res, next) {
+         accountModel
+           .find()
+           .sort({ time: -1 })
+           .then(res1 => {
+             res.json({
+               code: '0000',
+               msg: '读取成功',
+               data: res1
+             })
+           })
+           .catch(err => {
+             res.json({
+               code: '2001',
+               msg: '获取失败',
+               data: null
+             })
+           })
+       })
+
+       // 新增账单
+       router.post('/account', (req, res) => {
+         console.log(req.body)
+         if (!req.body.title) {
+           res.json({
+             code: '2002',
+             msg: '标题不能为空',
+             data: null
+           })
+           return
+         } else if (!(req.body.type === 0 || req.body.type === 1)) {
+           res.json({
+             code: '2003',
+             msg: '类型不能为空',
+             data: null
+           })
+           return
+         } else if (!req.body.time) {
+           res.json({
+             code: '2004',
+             msg: '时间不能为空',
+             data: null
+           })
+           return
+         } else if (!req.body.account) {
+           res.json({
+             code: '2005',
+             msg: '金额不能为空',
+             data: null
+           })
+           return
+         }
+         accountModel
+           .create({
+             ...req.body,
+             time: moment(req.body.time).toDate()
+           })
+           .then(res1 => {
+             res.json({
+               code: '0000',
+               msg: '新增成功',
+               data: res1
+             })
+           })
+           .catch(err => {
+             res.json({
+               code: '2002',
+               msg: '新增失败',
+               data: null
+             })
+           })
+       })
+
+       // 删除
+       router.delete('/account/:id', (req, res) => {
+         accountModel
+           .deleteOne({ _id: req.params.id })
+           .then(res1 => {
+             res.json({
+               code: '0000',
+               msg: '删除成功',
+               data: `成功删除${res1.deletedCount}条数据`
+             })
+           })
+           .catch(err => {
+             res.json({
+               code: '2003',
+               msg: '删除失败',
+               data: null
+             })
+           })
+       })
+
+       // 获取单条账单信息
+       router.get('/account/:id', (req, res) => {
+         findAccount(req.params.id, res)
+       })
+
+       router.patch('/account/:id', (req, res) => {
+         const _id = req.params.id
+         accountModel
+           .updateOne({ _id }, req.body)
+           .then(res1 => {
+             // 这里只是返回了更新的数据，但是不是某一条的具体信息，所以需要重新查询一次
+             // res.json({
+             //   code: '0000',
+             //   msg: '更新成功',
+             //   data: res1
+             // })
+             findAccount(_id, res)
+           })
+           .catch(err => {
+             res.json({
+               code: '2005',
+               msg: '更新失败',
+               data: null
+             })
+           })
+       })
+
+       function findAccount(_id, res) {
+         accountModel
+           .findById({ _id })
+           .then(res1 => {
+             res.json({
+               code: '0000',
+               msg: '查询成功',
+               data: res1
+             })
+           })
+           .catch(err => {
+             res.json({
+               code: '2004',
+               msg: '查询失败',
+               data: null
+             })
+           })
+       }
+
+       module.exports = router
+       ```
+
+       < apipost 的接口：https://console-docs.apipost.cn/preview/50d67ffed64d35bf/1e2a329cea3f54cc
+
+5.  编写登录/注册
+
+    1. 初始注册/登录页面
+       < views/auth/reg.ejs
+
+       ```html
+       <!DOCTYPE html>
+       <html lang="en">
+         <head>
+           <meta charset="UTF-8" />
+           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+           <title>注册</title>
+           <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.css" rel="stylesheet" />
+         </head>
+
+         <body>
+           <div class="container">
+             <div class="row">
+               <div class="col-xs-12 col-md-8 col-md-offset-2 col-lg-4 col-lg-offset-4">
+                 <h2>注册</h2>
+                 <hr />
+                 <form method="post" action="/reg">
+                   <div class="form-group">
+                     <label for="item">用户名</label>
+                     <input name="username" type="text" class="form-control" id="item" />
+                   </div>
+                   <div class="form-group">
+                     <label for="time">密码</label>
+                     <input name="password" type="password" class="form-control" id="time" />
+                   </div>
+                   <hr />
+                   <button type="submit" class="btn btn-primary btn-block">注册</button>
+                 </form>
+               </div>
+             </div>
+           </div>
+         </body>
+       </html>
+       ```
+
+       < views/auth/login.ejs
+
+       ```html
+       <!DOCTYPE html>
+       <html lang="en"></html>
+
+       <head>
+           <meta charset="UTF-8" />
+           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+           <title>登录</title>
+           <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.css" rel="stylesheet" />
+       </head>
+
+       <body>
+           <div class="container">
+               <div class="row">
+                   <div class="col-xs-12 col-md-8 col-md-offset-2 col-lg-4 col-lg-offset-4">
+                       <h2>登录</h2>
+                       <hr />
+                       <form method="post" action="/login">
+                           <div class="form-group">
+                               <label for="item">用户名</label>
+                               <input name="username" type="text" class="form-control" id="item" />
+                           </div>
+                           <div class="form-group">
+                               <label for="time">密码</label>
+                               <input name="password" type="password" class="form-control" id="time" />
+                           </div>
+                           <hr>
+                           <button type="submit" class="btn btn-primary btn-block">登录</button>
+                       </form>
+                   </div>
+               </div>
+           </div>
+       </body>
+
+       </html>
+       ```
+
+    2. 在 app.js 中引入 routes/web/auth.js
+       < app.js
+
+       ```js
+       const userRouter = require('./routes/web/auth')
+       app.use('/', userRouter)
+       ```
+
+    3. 编写 userModel.js
+       < models/userModel.js
+
+       ```js
+       const mongoose = require('mongoose')
+
+       const userSchema = new mongoose.Schema({
+         username: {
+           type: String,
+           required: true
+         },
+         password: {
+           type: String,
+           required: true
+         }
+       })
+
+       const userModel = mongoose.model('user', userSchema)
+
+       module.exports = userModel
+       ```
+
+    4. 展示登录/注册页面，登录、注册和退出登录操作
+       安装 md5：`npm i md5`
+
+       < routes/web/auth.js
+
+       ```js
+       const express = require('express')
+       const router = express.Router()
+       const userModel = require('../../models/userhModel')
+       const md5 = require('md5')
+
+       // 注册页面
+       router.get('/reg', (req, res) => {
+         res.render('auth/reg')
+       })
+
+       // 注册操作
+       router.post('/reg', (req, res) => {
+         const { username, password } = req.body
+         if (!username) {
+           return res.send('用户名不能为空')
+         } else if (!password) {
+           return res.send('密码不能为空')
+         }
+         userModel
+           .create({ username, password: md5(password) })
+           .then(() => {
+             res.render('success', { msg: '注册成功', url: 'auth/login', flag: '1' })
+           })
+           .catch(() => {
+             res.status(500).send('注册失败')
+           })
+       })
+
+       // 登录页面
+       router.get('/login', (req, res) => {
+         res.render('auth/login')
+       })
+
+       // 登录操作
+       router.post('/login', (req, res) => {
+         const { username, password } = req.body
+         if (!username) {
+           return res.send('用户名不能为空')
+         } else if (!password) {
+           return res.send('密码不能为空')
+         }
+         userModel
+           .findOne({ username, password: md5(password) })
+           .then(res1 => {
+             if (!res1) {
+               return res.status(500).send('用户名或密码输入错误')
+             }
+             res.render('success', { msg: '登录成功', url: 'account', flag: '1' })
+           })
+           .catch(() => {
+             res.status(500).send('登录失败')
+           })
+       })
+
+       // 退出登录操作
+       router.post('/logout', (req, res) => {
+         res.render('success', { msg: '退出成功', url: 'login', flag: '1' })
+       })
+
+       module.exports = router
+       ```
+
+    5. 给账单列表页添加退出登录按钮
+       < views/list.ejs
+       ```html
+       <div class="row">
+         <form class="col-xs-12 text-right" action="/logout" method="post">
+           <button class="btn btn-danger">退出登录</button>
+         </form>
+       </div>
+       <div class="row">
+         <h2 class="col-xs-6">记账本</h2>
+         <h2 class="col-xs-6 text-right">
+           <a href="/account/create" class="btn btn-primary">添加账单</a>
+         </h2>
+       </div>
+       ```
+
+6.  写入 session
+
+    1. 安装 express-session：`npm i express-session`
+    2. 安装 connect-mongo：`npm i connect-mongo`
+    3. 设置 session 中间件
+       < app.js
+       ```js
+       const session = require('express-session')
+       const MongoStore = require('connect-mongo')
+       const { DBHOST, DBPORT, DBNAME } = require('./config/config')
+       app.use(
+         session({
+           name: 'sid', // 设置 cookie 的 name， 默认值是：connect.sid
+           secret: 'ranxin', // 参与加密的字符串（又称签名）
+           saveUninitialized: false, // 是否为每次请求都设置一个 cookie 用来存储 session
+           resave: true, // 是否在每次请求时重新保存 session
+           store: MongoStore.create({
+             mongoUrl: `mongodb://${DBHOST}:${DBPORT}/${DBNAME}` // 数据库的连接配置
+           }),
+           cookie: {
+             httpOnly: true, // 开启前后端无法通过 JS 操作
+             maxAge: 60 // 控制 sessionID 过期时间
+           }
+         })
+       )
+       ```
+
+7.  配置 404
+    < app.js
+    ```js
+    app.use(function (req, res, next) {
+      // next(createError(404))
+      res.render('404')
+    })
+    ```
