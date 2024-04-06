@@ -10,6 +10,7 @@ const { DBHOST, DBPORT, DBNAME } = require('./config/config')
 const indexRouter = require('./routes/web/index')
 const userRouter = require('./routes/web/auth')
 const accountRouter = require('./routes/api/account')
+const authRouter = require('./routes/api/auth')
 
 const app = express()
 app.use(
@@ -23,7 +24,7 @@ app.use(
     }),
     cookie: {
       httpOnly: true, // 开启前后端无法通过 JS 操作
-      maxAge: 60 * 60 * 60 * 24 * 7 // 控制 sessionID 过期时间
+      maxAge: 60 * 60 * 24 * 7 // 控制 sessionID 过期时间
     }
   })
 )
@@ -41,6 +42,7 @@ app.use(express.static(path.join(__dirname, '../public')))
 app.use('/', indexRouter)
 app.use('/', userRouter)
 app.use('/api', accountRouter)
+app.use('/api', authRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
