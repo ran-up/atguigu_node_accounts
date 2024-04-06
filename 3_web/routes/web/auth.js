@@ -19,7 +19,7 @@ router.post('/reg', (req, res) => {
   userModel
     .create({ username, password: md5(password) })
     .then(() => {
-      res.render('success', { msg: '注册成功', url: 'auth/login', flag: '1' })
+      res.render('success', { msg: '注册成功', url: '/login', flag: '1' })
     })
     .catch(() => {
       res.status(500).send('注册失败')
@@ -47,7 +47,7 @@ router.post('/login', (req, res) => {
       }
       req.session.username = res1.username
       req.session._id = res1._id
-      res.render('success', { msg: '登录成功', url: 'account', flag: '1' })
+      res.render('success', { msg: '登录成功', url: '/account', flag: '1' })
     })
     .catch(() => {
       res.status(500).send('登录失败')
@@ -56,7 +56,9 @@ router.post('/login', (req, res) => {
 
 // 退出登录操作
 router.post('/logout', (req, res) => {
-  res.render('success', { msg: '退出成功', url: 'login', flag: '1' })
+  req.session.destroy(() => {
+    res.render('success', { msg: '退出成功', url: '/login', flag: '1' })
+  })
 })
 
 module.exports = router
