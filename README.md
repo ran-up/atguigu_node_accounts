@@ -42,7 +42,8 @@
     })
     ```
 4.  在【views】创建 list.ejs 和 create.ejs，将对应的 js 和 css 文件放到【public】中
-    < list.ejs 代码
+
+    > list.ejs 代码
 
     ```html
     <!DOCTYPE html>
@@ -109,7 +110,7 @@
     </html>
     ```
 
-    < create.ejs 代码
+    > create.ejs 代码
 
     ```html
     <!DOCTYPE html>
@@ -173,7 +174,8 @@
 
 5.  将 create.ejs 中文件引入方式变为绝对路径
 6.  编写新增记账接口
-    < routes/index.js
+
+    > routes/index.js
 
     ```js
     router.post('/account', (req, res) => {
@@ -183,7 +185,7 @@
     })
     ```
 
-    < views/create.ejs
+    > views/create.ejs
 
     ```html
     <form action="/account" method="post"></form>
@@ -311,7 +313,7 @@
 
 10. 获取 db.json 中的数据并渲染到 list.ejs
 
-    < routes/index.js
+    > routes/index.js
 
     ```js
     // 记账列表
@@ -321,7 +323,7 @@
     })
     ```
 
-    < vies/create.ejs 给 type 设置属性，0 为支出，1 为收入
+    > vies/create.ejs 给 type 设置属性，0 为支出，1 为收入
 
     ```html
     <div class="form-group">
@@ -333,7 +335,7 @@
     </div>
     ```
 
-    < views/list.ejs
+    > views/list.ejs
 
     ```html
     <div class="container">
@@ -369,7 +371,7 @@
 
     1. 接口
 
-    < routes/index.js
+    > routes/index.js
 
     ```js
     // 删除
@@ -391,7 +393,7 @@
     })
     ```
 
-    < success.ejs
+    > success.ejs
 
     ```html
     <div class="container">
@@ -413,7 +415,8 @@
 4. 连接 mongodb 并拆分：
 
 5. 设置方便管理的公开配置
-   < config/config.js
+
+   > config/config.js
 
    ```js
    module.exports = {
@@ -424,7 +427,8 @@
    ```
 
 6. 引入 mongoose 并连接
-   < db/db.js
+
+   > db/db.js
 
    ```js
    /**
@@ -457,7 +461,8 @@
    ```
 
 7. 传入成功回调内容
-   < bin/www
+
+   > bin/www
 
    ```js
    const db = require('../db/db')
@@ -518,7 +523,8 @@
    ```
 
 8. 编写 schema
-   < models/accountModel.js
+
+   > models/accountModel.js
 
    ```js
    const mongoose = require('mongoose')
@@ -551,7 +557,8 @@
 9. 使用 mongoose 替换 lowdb
 
    下载 moment，将字符串时间变为时间对象
-   < routes/index.js
+
+   > routes/index.js
 
    ```js
    var express = require('express')
@@ -609,7 +616,7 @@
    module.exports = router
    ```
 
-   < views/list.ejs
+   > views/list.ejs
 
    ```js
    <!DOCTYPE html>
@@ -711,7 +718,8 @@
     1. 新建 routes/api/accounts.js，将 index.js 包含到 web/index.js，accounts.js 的初始内容是 index.js
     2. 安装好 apipost 软件
     3. 编写接口:
-       < routes/api/accounts.js
+
+       > routes/api/accounts.js
 
        ```js
        var express = require('express')
@@ -862,12 +870,13 @@
        module.exports = router
        ```
 
-       < apipost 的接口：https://console-docs.apipost.cn/preview/50d67ffed64d35bf/1e2a329cea3f54cc
+       > apipost 的接口：https://console-docs.apipost.cn/preview/50d67ffed64d35bf/1e2a329cea3f54cc
 
 5.  编写登录/注册
 
     1. 初始注册/登录页面
-       < views/auth/reg.ejs
+
+       > views/auth/reg.ejs
 
        ```html
        <!DOCTYPE html>
@@ -905,7 +914,7 @@
        </html>
        ```
 
-       < views/auth/login.ejs
+       > views/auth/login.ejs
 
        ```html
        <!DOCTYPE html>
@@ -946,7 +955,8 @@
        ```
 
     2. 在 app.js 中引入 routes/web/auth.js
-       < app.js
+
+       > app.js
 
        ```js
        const userRouter = require('./routes/web/auth')
@@ -954,7 +964,8 @@
        ```
 
     3. 编写 userModel.js
-       < models/userModel.js
+
+       > models/userModel.js
 
        ```js
        const mongoose = require('mongoose')
@@ -978,7 +989,7 @@
     4. 展示登录/注册页面，登录、注册和退出登录操作
        安装 md5：`npm i md5`
 
-       < routes/web/auth.js
+       > routes/web/auth.js
 
        ```js
        const express = require('express')
@@ -1044,7 +1055,7 @@
        ```
 
     5. 给账单列表页添加退出登录按钮
-       < views/list.ejs
+       > views/list.ejs
        ```html
        <div class="row">
          <form class="col-xs-12 text-right" action="/logout" method="post">
@@ -1066,7 +1077,8 @@
     3. 设置 session 中间件
 
        1. 引入 session
-          < app.js
+
+          > app.js
 
           ```js
           const session = require('express-session')
@@ -1090,7 +1102,8 @@
           ```
 
        2. 设置 session
-          < routes/auth.js
+
+          > routes/auth.js
 
           ```js
           // 登录操作
@@ -1119,7 +1132,7 @@
 
     4. 编写检测 session 的登录中间件
 
-       < middlewares/checkLoginMiddleware.js
+       > middlewares/checkLoginMiddleware.js
 
        ```js
        module.exports = (req, res, next) => {
@@ -1131,7 +1144,8 @@
        ```
 
     5. 引入检测 session 的登录中间件
-       < routes/index.js
+
+       > routes/index.js
 
        ```js
        const express = require('express')
@@ -1200,7 +1214,8 @@
 
     1. 安装 jsonwebtoken: `npm i jsonwebtoken`
     2. 设置公共签名
-       < config/config.js
+
+       > config/config.js
 
        ```js
        module.exports = {
@@ -1212,7 +1227,8 @@
        ```
 
     3. 创建 token
-       < routes/api/auth.js
+
+       > routes/api/auth.js
 
        ```js
        const express = require('express')
@@ -1289,7 +1305,8 @@
        ```
 
     4. 创建检验 token 的中间件
-       < middlewares/checkTokenMiddleware.js
+
+       > middlewares/checkTokenMiddleware.js
 
        ```js
        const jwt = require('jsonwebtoken')
@@ -1325,7 +1342,8 @@
        ```
 
     5. 引入 token 检验中间件
-       < routes/api/account.js
+
+       > routes/api/account.js
 
        ```js
        var express = require('express')
@@ -1478,7 +1496,7 @@
        ```
 
 8.  配置 404
-    < app.js
+    > app.js
     ```js
     app.use(function (req, res, next) {
       // next(createError(404))
