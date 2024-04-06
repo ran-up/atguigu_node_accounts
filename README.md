@@ -2,7 +2,9 @@
 
 学习 node 的一个非常简易的练习项目 -- 记账本
 
-# 技术
+使用 node.js 开发，express-generator 搭建的 express 骨架，mongoose 连接的 mongodb
+
+# 使用到的技术
 
 1. node.js
 2. ejs
@@ -10,21 +12,25 @@
 4. lowdb
 5. mongodb
 6. mongoose
-
-## 工具
-
-1. shortid -- 生成独一无二的 id
-2. moment -- 将字符串时间变为时间对象
+7. express-session -- 管理 session
+8. connect-mongo -- 管理 session
+9. jsonwebtoken -- 管理 token
+10. shortid -- 生成独一无二的 id
+11. moment -- 将字符串时间变为时间对象
+12. md5
 
 # 项目
 
-## 使用 lowdb 保存数据 -- 1_lowdb
+## 初始化项目
 
 1.  搭建项目：`express -e 项目名`
 2.  安装依赖: `npm i`
-3.  修改 package.json 中的启动方式: `"start": "node ./bin/www"` --> `"start": "nodemon ./1_lowdb/bin/www"`
-4.  运行项目：`npm start`，浏览器输入：`http://localhost:3000/`
-5.  在【routes】【index.js】设置路由
+
+## 使用 lowdb 保存数据 -- 1_lowdb
+
+1.  修改 package.json 中的启动方式: `"start": "node ./bin/www"` --> `"start": "nodemon ./1_lowdb/bin/www"`
+2.  运行项目：`npm start`，浏览器输入：`http://localhost:3000/`
+3.  在【routes】【index.js】设置路由
     ```js
     // 记账列表
     router.get('/account', function (req, res, next) {
@@ -35,7 +41,7 @@
       res.render('create')
     })
     ```
-6.  在【views】创建 list.ejs 和 create.ejs，将对应的 js 和 css 文件放到【public】中
+4.  在【views】创建 list.ejs 和 create.ejs，将对应的 js 和 css 文件放到【public】中
     < list.ejs 代码
 
     ```html
@@ -165,8 +171,8 @@
      </html>
     ```
 
-7.  将 create.ejs 中文件引入方式变为绝对路径
-8.  编写新增记账接口
+5.  将 create.ejs 中文件引入方式变为绝对路径
+6.  编写新增记账接口
     < routes/index.js
 
     ```js
@@ -216,7 +222,7 @@
     </form>
     ```
 
-9.  使用 lowdb 来存储数据
+7.  使用 lowdb 来存储数据
 
     1. 安装 lowdb：`npm i lowdb@1.0.0`
     2. 创建 data/db.json
@@ -238,7 +244,7 @@
     })
     ```
 
-10. 自动添加 id，并将添加方式变为 unshift
+8.  自动添加 id，并将添加方式变为 unshift
 
     1. 安装 shortid：`npm i shortid`
     2. 使用：
@@ -258,7 +264,7 @@
     })
     ```
 
-11. 添加提示语
+9.  添加提示语
 
     1. 新建 views/success.ejs
 
@@ -303,7 +309,7 @@
     })
     ```
 
-12. 获取 db.json 中的数据并渲染到 list.ejs
+10. 获取 db.json 中的数据并渲染到 list.ejs
 
     < routes/index.js
 
@@ -359,7 +365,7 @@
     </div>
     ```
 
-13. 删除记账
+11. 删除记账
 
     1. 接口
 
@@ -409,15 +415,15 @@
 5. 设置方便管理的公开配置
    < config/config.js
 
-```js
-module.exports = {
-  DBHOST: '127.0.0.1',
-  DBPORT: 27017,
-  DBNAME: 'accounts'
-}
-```
+   ```js
+   module.exports = {
+     DBHOST: '127.0.0.1',
+     DBPORT: 27017,
+     DBNAME: 'accounts'
+   }
+   ```
 
-2. 引入 mongoose 并连接
+6. 引入 mongoose 并连接
    < db/db.js
 
    ```js
@@ -450,8 +456,8 @@ module.exports = {
    }
    ```
 
-   3. 传入成功回调内容
-      < bin/www
+7. 传入成功回调内容
+   < bin/www
 
    ```js
    const db = require('../db/db')
@@ -511,7 +517,7 @@ module.exports = {
    })
    ```
 
-3. 编写 schema
+8. 编写 schema
    < models/accountModel.js
 
    ```js
@@ -542,7 +548,7 @@ module.exports = {
    module.exports = accountModel
    ```
 
-4. 使用 mongoose 替换 lowdb
+9. 使用 mongoose 替换 lowdb
 
    下载 moment，将字符串时间变为时间对象
    < routes/index.js
@@ -698,7 +704,7 @@ module.exports = {
     const accountRouter = require('./routes/api/account')
     app.use('/api', accountRouter)
     ```
-3.  运行项目：`npm start`，浏览器输入：`http://localhost:3000/api/account`
+3.  运行项目：`npm start`，浏览器输入：`http://localhost:3000/account`
 
 4.  编写接口：
 
