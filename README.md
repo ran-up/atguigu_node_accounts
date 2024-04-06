@@ -1190,7 +1190,288 @@ module.exports = {
        module.exports = router
        ```
 
-7.  配置 404
+7.  配置服务端的登录验证
+
+    1. 安装 jsonwebtoken: `npm i jsonwebtoken`
+    2. 设置公共签名
+       < config/config.js
+
+       ```js
+       module.exports = {
+         DBHOST: '127.0.0.1',
+         DBPORT: 27017,
+         DBNAME: 'accounts',
+         SECRET: 'ranxin'
+       }
+       ```
+
+    3. 创建 token
+       < routes/api/auth.js
+
+       ```js
+       const express = require('express')
+       const router = express.Router()
+       const userModel = require('../../models/userhModel')
+       const md5 = require('md5')
+       const jwt = require('jsonwebtoken')
+       const { SECRET } = require('../../config/config')
+
+       // 登录操作
+       router.post('/login', (req, res) => {
+         const { username, password } = req.body
+         if (!username) {
+           return res.json({
+             code: '3001',
+             msg: '用户名不能为空',
+             data: null
+           })
+         } else if (!password) {
+           return res.json({
+             code: '3002',
+             msg: '密码不能为空',
+             data: null
+           })
+         }
+         userModel
+           .findOne({ username, password: md5(password) })
+           .then(res1 => {
+             if (!res1) {
+               return res.json({
+                 code: '3003',
+                 msg: '查找失败',
+                 data: null
+               })
+             }
+
+             // 创建当前用户的 token
+             const token = jwt.sign(
+               {
+                 username: res1.username,
+                 _id: res1._id
+               },
+               SECRET,
+               {
+                 expiresIn: 60 * 60 * 24 * 7
+               }
+             )
+
+             res.json({
+               code: '0000',
+               msg: '登录成功',
+               data: token
+             })
+           })
+           .catch(() => {
+             res.json({
+               code: '3004',
+               msg: '登录失败',
+               data: null
+             })
+           })
+       })
+
+       // 退出登录操作
+       router.post('/logout', (req, res) => {
+         res.json({
+           code: '0000',
+           msg: '退出成功',
+           data: null
+         })
+       })
+
+       module.exports = router
+       ```
+
+    4. 创建检验 token 的中间件
+       < middlewares/checkTokenMiddleware.js
+
+       ```js
+       const jwt = require('jsonwebtoken')
+       const { SECRET } = require('../config/config')
+
+       module.exports = (req, res, next) => {
+         // 获取 token
+         const token = req.get('token')
+
+         if (!token) {
+           return res.json({
+             code: '2001',
+             msg: 'token 缺失',
+             data: null
+           })
+         }
+         // 检验 token
+         jwt.verify(token, SECRET, (err, data) => {
+           if (err) {
+             return res.json({
+               code: '2002',
+               msg: 'token 检验失败',
+               data: null
+             })
+           }
+
+           // 记录每个登录的用户信息
+           req.user = data
+
+           next()
+         })
+       }
+       ```
+
+    5. 引入 token 检验中间件
+       < routes/api/account.js
+
+       ```js
+       var express = require('express')
+       var router = express.Router()
+       const moment = require('moment')
+       const accountModel = require('../../models/accountModel')
+       const checkTokenMiddleware = require('../../middlewares/checkTokenMiddleware')
+
+       // 记账列表
+       router.get('/account', checkTokenMiddleware, function (req, res, next) {
+         accountModel
+           .find()
+           .sort({ time: -1 })
+           .then(res1 => {
+             res.json({
+               code: '0000',
+               msg: '读取成功',
+               data: res1
+             })
+           })
+           .catch(err => {
+             res.json({
+               code: '2001',
+               msg: '获取失败',
+               data: null
+             })
+           })
+       })
+
+       // 新增账单
+       router.post('/account', checkTokenMiddleware, (req, res) => {
+         console.log(req.body)
+         if (!req.body.title) {
+           res.json({
+             code: '2002',
+             msg: '标题不能为空',
+             data: null
+           })
+           return
+         } else if (!(req.body.type === 0 || req.body.type === 1)) {
+           res.json({
+             code: '2003',
+             msg: '类型不能为空',
+             data: null
+           })
+           return
+         } else if (!req.body.time) {
+           res.json({
+             code: '2004',
+             msg: '时间不能为空',
+             data: null
+           })
+           return
+         } else if (!req.body.account) {
+           res.json({
+             code: '2005',
+             msg: '金额不能为空',
+             data: null
+           })
+           return
+         }
+         accountModel
+           .create({
+             ...req.body,
+             time: moment(req.body.time).toDate()
+           })
+           .then(res1 => {
+             res.json({
+               code: '0000',
+               msg: '新增成功',
+               data: res1
+             })
+           })
+           .catch(err => {
+             res.json({
+               code: '2002',
+               msg: '新增失败',
+               data: null
+             })
+           })
+       })
+
+       // 删除
+       router.delete('/account/:id', checkTokenMiddleware, (req, res) => {
+         accountModel
+           .deleteOne({ _id: req.params.id })
+           .then(res1 => {
+             res.json({
+               code: '0000',
+               msg: '删除成功',
+               data: `成功删除${res1.deletedCount}条数据`
+             })
+           })
+           .catch(err => {
+             res.json({
+               code: '2003',
+               msg: '删除失败',
+               data: null
+             })
+           })
+       })
+
+       // 获取单条账单信息
+       router.get('/account/:id', checkTokenMiddleware, (req, res) => {
+         findAccount(req.params.id, res)
+       })
+
+       router.patch('/account/:id', checkTokenMiddleware, (req, res) => {
+         const _id = req.params.id
+         accountModel
+           .updateOne({ _id }, req.body)
+           .then(res1 => {
+             // 这里只是返回了更新的数据，但是不是某一条的具体信息，所以需要重新查询一次
+             // res.json({
+             //   code: '0000',
+             //   msg: '更新成功',
+             //   data: res1
+             // })
+             findAccount(_id, res)
+           })
+           .catch(err => {
+             res.json({
+               code: '2005',
+               msg: '更新失败',
+               data: null
+             })
+           })
+       })
+
+       function findAccount(_id, res) {
+         accountModel
+           .findById({ _id })
+           .then(res1 => {
+             res.json({
+               code: '0000',
+               msg: '查询成功',
+               data: res1
+             })
+           })
+           .catch(err => {
+             res.json({
+               code: '2004',
+               msg: '查询失败',
+               data: null
+             })
+           })
+       }
+
+       module.exports = router
+       ```
+
+8.  配置 404
     < app.js
     ```js
     app.use(function (req, res, next) {
