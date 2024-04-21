@@ -25,6 +25,7 @@
 
 1.  搭建项目：`express -e 项目名`
 2.  安装依赖: `npm i`
+3.  帐号：admin, 密码：admin
 
 ## 使用 lowdb 保存数据 -- 1_lowdb
 
